@@ -39,3 +39,10 @@ train:
 data:
   shard_dir: data/tokenized
   shuffle_buffer: 10000
+  # Up-sample dialogue sources so they dominate training despite being a
+  # small fraction of raw tokens. Common Pile (~94% raw) gets 1.0;
+  # Gutenberg dialogue (~2.4%) gets 8x weighting; SQuAD (~3.6%) gets 4x.
+  source_weights:
+    common_pile: 1.0
+    gutenberg_books: 8.0
+    squad: 4.0

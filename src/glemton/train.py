@@ -82,6 +82,7 @@ def train(config_path: str):
         seq_len=tr["seq_len"],
         batch_size=tr["micro_batch_size"],
         num_workers=2,
+        source_weights=cfg["data"].get("source_weights"),
     )
 
     micro_batches_per_step = tr["grad_accum_steps"]

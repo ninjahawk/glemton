@@ -99,9 +99,8 @@ def squad_qa() -> int:
             q = row["question"].strip()
             ans = row["answers"]["text"][0] if row["answers"]["text"] else ""
             ctx = row.get("context", "")
-            lines.append(
-                f"<user> Here's some context:\n{ctx}\n\n{q}\n<reply> {ans}"
-            )
+            # Cleaner format: only include context occasionally, vary phrasing.
+            lines.append(f"<user> {q}\n<reply> {ans}")
         # write in shards of 50k pairs
         shard_size = 50_000
         for i in range(0, len(lines), shard_size):

@@ -33,15 +33,21 @@ class PackedDataset(torch.utils.data.IterableDataset):
     """Yields (input, target) pairs of shape (seq_len,) from a set of packed shards.
 
     Random shard + random offset each time. No epoch boundary.
+
+    `source_weights`: optional dict mapping source-directory name (e.g.
+    "gutenberg_books") to a relative weight multiplier. Used to up-sample
+    dialogue-heavy sources beyond their natural token-count fraction.
+    Default: every source weighted by its raw token count.
     """
 
-    def __init__(self, shard_dir: str, seq_len: int, seed: int = 0):
+    def __init__(self, shard_dir: str, seq_len: int, seed: int = 0, source_weights: dict[str, float] | None = None):
         super().__init__()
         self.shard_paths = sorted(str(p) for p in Path(shard_dir).rglob("*.bin"))
         if not self.shard_paths:
             raise FileNotFoundError(f"No .bin shards found in {shard_dir}")
         self.seq_len = seq_len
         self.seed = seed
+        self.source_weights = source_weights or {}
 
     def __iter__(self) -> Iterator[tuple[torch.Tensor, torch.Tensor]]:
         worker = torch.utils.data.get_worker_info()
@@ -49,7 +55,18 @@ class PackedDataset(torch.utils.data.IterableDataset):
         rng = np.random.default_rng(rng_seed)
         shards = [open_shard(p) for p in self.shard_paths]
         sizes = np.array([len(s) for s in shards], dtype=np.int64)
-        weights = sizes / sizes.sum()
+        # Per-source multipliers, default 1.0 if not specified.
+        mults = np.ones_like(sizes, dtype=np.float64)
+        for i, p in enumerate(self.shard_paths):
+            for src, w in self.source_weights.items():
+                if f"{src}{Path(p).anchor[-1] if False else '/'}" in p.replace("\\", "/"):
+                    mults[i] = float(w)
+                    break
+                if Path(p).parent.name == src:
+                    mults[i] = float(w)
+                    break
+        eff_weights = (sizes * mults).astype(np.float64)
+        weights = eff_weights / eff_weights.sum()
         while True:
             i = rng.choice(len(shards), p=weights)
             arr = shards[i]
@@ -63,8 +80,14 @@ class PackedDataset(torch.utils.data.IterableDataset):
             yield x, y
 
 
-def make_dataloader(shard_dir: str, seq_len: int, batch_size: int, num_workers: int = 2):
-    ds = PackedDataset(shard_dir, seq_len=seq_len)
+def make_dataloader(
+    shard_dir: str,
+    seq_len: int,
+    batch_size: int,
+    num_workers: int = 2,
+    source_weights: dict[str, float] | None = None,
+):
+    ds = PackedDataset(shard_dir, seq_len=seq_len, source_weights=source_weights)
     return torch.utils.data.DataLoader(
         ds,
         batch_size=batch_size,
