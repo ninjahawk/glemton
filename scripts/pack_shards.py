@@ -46,11 +46,21 @@ def main(argv: list[str]) -> int:
             continue
         text = shard.read_text(encoding="utf-8", errors="ignore")
         # Encode docs (separated by blank lines) and join with <eos>.
+        # IMPORTANT: only insert <eos> between docs that are >= MIN_LEN tokens
+        # apart in source text. Short fragments stay glued so the model sees
+        # extended dialogue rather than learning <reply> -> <eos>.
+        MIN_LEN_CHARS = 600
         docs = [d for d in text.split("\n\n") if d.strip()]
         ids: list[int] = []
+        run_chars = 0
         for d in docs:
             enc = tok.encode(d).ids
             ids.extend(enc)
+            run_chars += len(d)
+            if run_chars >= MIN_LEN_CHARS:
+                ids.append(eos_id)
+                run_chars = 0
+        if run_chars > 0:
             ids.append(eos_id)
         arr = np.array(ids, dtype=np.uint16)
         dst.parent.mkdir(parents=True, exist_ok=True)
