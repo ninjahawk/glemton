@@ -1,0 +1,28 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Data and checkpoints — too big for git
+data/raw/
+data/processed/
+data/tokenized/
+checkpoints/
+logs/
+wandb/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Tokenizer artifacts kept in repo
+!data/tokenizer/
+
+# Local-only
+*.local
+.env

@@ -1,0 +1,39 @@
+name: glemton-350m
+model:
+  vocab_size: 32000
+  d_model: 1024
+  n_layers: 30
+  n_heads: 16
+  n_kv_heads: 4
+  ffn_dim: 2752
+  max_seq_len: 32768
+  rope_theta: 1000000.0
+  norm_eps: 1.0e-5
+  tie_embeddings: true
+  attention:
+    sliding_window: 4096
+    global_every: 6
+
+train:
+  batch_size: 8
+  micro_batch_size: 1
+  grad_accum_steps: 8
+  seq_len: 2048
+  total_tokens: 7_000_000_000
+  lr: 3.0e-4
+  lr_min: 3.0e-5
+  warmup_tokens: 100_000_000
+  cosine_decay_to: 0.1
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+  precision: bf16
+  optimizer: adamw_8bit
+  grad_checkpointing: true
+  compile: false
+  checkpoint_every_tokens: 250_000_000
+
+data:
+  shard_dir: data/tokenized
+  shuffle_buffer: 100000

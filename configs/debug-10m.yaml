@@ -1,0 +1,39 @@
+name: glemton-debug-10m
+model:
+  vocab_size: 32000
+  d_model: 256
+  n_layers: 6
+  n_heads: 8
+  n_kv_heads: 2
+  ffn_dim: 688
+  max_seq_len: 2048
+  rope_theta: 10000.0
+  norm_eps: 1.0e-5
+  tie_embeddings: true
+  attention:
+    sliding_window: 2048
+    global_every: 6
+
+train:
+  batch_size: 16
+  micro_batch_size: 4
+  grad_accum_steps: 4
+  seq_len: 1024
+  total_tokens: 50_000_000
+  lr: 6.0e-4
+  lr_min: 6.0e-5
+  warmup_tokens: 1_000_000
+  cosine_decay_to: 0.1
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+  precision: bf16
+  optimizer: adamw
+  grad_checkpointing: false
+  compile: false
+  checkpoint_every_tokens: 10_000_000
+
+data:
+  shard_dir: data/tokenized
+  shuffle_buffer: 10000

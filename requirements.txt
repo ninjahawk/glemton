@@ -1,0 +1,18 @@
+# Pinned dependencies. PyTorch nightly cu128 is installed separately:
+#   pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128
+# That step is split out because PyTorch wheels live on their own index.
+
+transformers>=4.45
+tokenizers>=0.20
+datasets>=3.0
+sentencepiece
+bitsandbytes; platform_system != "Windows"  # bitsandbytes on Windows historically requires special wheels
+wandb
+pyyaml
+tqdm
+einops
+numpy
+requests
+beautifulsoup4
+lxml
+regex
