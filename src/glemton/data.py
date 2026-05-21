@@ -37,7 +37,7 @@ class PackedDataset(torch.utils.data.IterableDataset):
 
     def __init__(self, shard_dir: str, seq_len: int, seed: int = 0):
         super().__init__()
-        self.shard_paths = sorted(str(p) for p in Path(shard_dir).glob("*.bin"))
+        self.shard_paths = sorted(str(p) for p in Path(shard_dir).rglob("*.bin"))
         if not self.shard_paths:
             raise FileNotFoundError(f"No .bin shards found in {shard_dir}")
         self.seq_len = seq_len
