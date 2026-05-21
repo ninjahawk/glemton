@@ -1,0 +1,61 @@
+name: glemton-350m-modern
+# The v1.0 production training config. Same 365M model as v1-victorian
+# but trained on the modern dialogue corpus (OPUS subtitles + HN + Stack
+# Exchange + Common Pile background) with no aggressive single-source
+# weighting.
+model:
+  vocab_size: 32000
+  d_model: 1024
+  n_layers: 30
+  n_heads: 16
+  n_kv_heads: 4
+  ffn_dim: 2752
+  max_seq_len: 32768
+  rope_theta: 1000000.0
+  norm_eps: 1.0e-5
+  tie_embeddings: true
+  attention:
+    sliding_window: 4096
+    global_every: 6
+
+train:
+  # bf16 weights confirmed working; ~4.7 GB peak at micro_batch=1, seq=2048.
+  batch_size: 8
+  micro_batch_size: 1
+  grad_accum_steps: 8
+  seq_len: 2048
+  # 1.5B-token first chatable Glemton 1.0. With OPUS subtitles weighted 5x,
+  # the model should see modern dialogue as the dominant register. ~33 hr on
+  # the 5070 at 12k tok/s; cut short any time and use whatever checkpoint
+  # is best by eval.
+  total_tokens: 1_500_000_000
+  lr: 3.0e-4
+  lr_min: 3.0e-5
+  warmup_tokens: 50_000_000
+  cosine_decay_to: 0.1
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+  precision: bf16
+  optimizer: adamw
+  grad_checkpointing: false
+  compile: false
+  checkpoint_every_tokens: 100_000_000
+
+data:
+  shard_dir: data/tokenized
+  shuffle_buffer: 100000
+  # New weights: dialogue-heavy sources dominate naturally without absurd
+  # multipliers. SQuAD dropped to 1x since the small corpus loops too hard
+  # at higher weights (proven by the v1-victorian run).
+  # OPUS is huge (~975M tokens raw) so even at 5x it dominates naturally.
+  # Common Pile is the background world-knowledge source.
+  # Gutenberg + HN add register variety. SQuAD gets minimal weight (proven
+  # to overfit at higher weights in v1-victorian).
+  source_weights:
+    common_pile: 0.5
+    gutenberg_books: 1.0
+    squad: 0.5
+    opus_subtitles: 5.0
+    hacker_news: 2.0

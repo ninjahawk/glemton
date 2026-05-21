@@ -15,25 +15,33 @@ model:
     global_every: 6
 
 train:
+  # micro_batch=2, grad_accum=4 -> effective batch 8 seqs * 2048 = 16 384 tokens/step
+  # 365M model fits in 4.7 GB peak at bf16 + AdamW; 12GB has plenty of headroom.
   batch_size: 8
   micro_batch_size: 1
   grad_accum_steps: 8
   seq_len: 2048
-  total_tokens: 7_000_000_000
+  # Overnight preview: target 500M tokens (~14 hours at 10k tok/s).
+  # Full v1.0 run will be 7B tokens; raise total_tokens then.
+  total_tokens: 500_000_000
   lr: 3.0e-4
   lr_min: 3.0e-5
-  warmup_tokens: 100_000_000
+  warmup_tokens: 25_000_000
   cosine_decay_to: 0.1
   weight_decay: 0.1
   beta1: 0.9
   beta2: 0.95
   grad_clip: 1.0
   precision: bf16
-  optimizer: adamw_8bit
-  grad_checkpointing: true
+  optimizer: adamw
+  grad_checkpointing: false
   compile: false
-  checkpoint_every_tokens: 250_000_000
+  checkpoint_every_tokens: 50_000_000
 
 data:
   shard_dir: data/tokenized
   shuffle_buffer: 100000
+  source_weights:
+    common_pile: 1.0
+    gutenberg_books: 8.0
+    squad: 4.0

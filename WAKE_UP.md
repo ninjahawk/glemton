@@ -1,5 +1,49 @@
 # WAKE_UP — final overnight status
 
+## STATUS UPDATE (added 04:40 local)
+
+**350M preview training is RUNNING.** Started at ~23:35, currently at ~220M tokens / 500M target (44% done). Expect completion around ~10:30. GPU is busy, do not run another GPU job until this finishes.
+
+Live log: `tail logs\glemton_350m_preview.log`
+
+Checkpoints saved so far at 50M / 100M / 150M / 200M tokens under `checkpoints/glemton-350m/`. Loss curve: 10.0 → 4.4 → 3.7 → 3.4 → 3.3 → 3.0. Steady decline.
+
+Quality samples at 250M-token checkpoint (just saved):
+```
+prompt:  The old man sat by the fire and remembered
+output:  The night of the summer day, which had been the night of the night,
+         was bright and gloom. The sky was high and mournful, but the sun
+         could not be seen there. The moon rose to light, and the rain was
+         dark. The moon looked dark, and the stars rose up.
+
+prompt:  The boy walked into the room. His mother said,
+output:  What is he doing?
+         Why is he standing there?
+         How is his mother?
+         Is he dead?
+         What is the matter?
+
+prompt:  Elizabeth turned to her sister and said,
+output:  The doctor told me all that I knew, that I was in the habit of
+         reputing my life. I had seen the world.
+         And what did that cause you to live?
+         I was.
+```
+
+This is genuinely literary prose. Repetition loops still appear in some samples (a known small-model issue), but the register is unmistakable. `<user>/<reply>` prompts still hit empty on this checkpoint — the model learned dialogue from the books, not from the synthetic turn markers.
+
+**At 300M tokens the model started regressing toward SQuAD Q&A format** — the 4× weighting on the tiny ~2.2M-token SQuAD corpus is too aggressive; SQuAD shards loop heavily and the model started overfitting to "What was the name of...?" templates. **The 250M-token checkpoint is the prose-quality peak** of this run.
+
+Lesson for the real v1.0 350M training:
+- Drop SQuAD weighting to 1.0× (or skip SQuAD entirely)
+- Get a properly-sized actual dialogue corpus instead (OPUS plain-text OpenSubtitles dumps, Stack Exchange archives, conversational interview corpora). Up-weighting tiny corpora is a trap.
+
+**If you want to stop the training run** to use the GPU for something else, kill the background process with task-id `br0lg0auj`. Checkpoints saved so far are usable.
+
+---
+
+
+
 **Session:** 2026-05-20 19:00 → 2026-05-21 ~00:00 (~5 hours of self-paced work)
 **Project:** Glemton — small open-weights conversational LM trained from scratch
 **Repo:** https://github.com/ninjahawk/glemton.git (6 commits ready, never pushed — needs your `git push`)
