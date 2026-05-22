@@ -21,9 +21,14 @@ train:
   micro_batch_size: 1
   grad_accum_steps: 8
   seq_len: 2048
-  # Overnight preview: target 500M tokens (~14 hours at 10k tok/s).
-  # Full v1.0 run will be 7B tokens; raise total_tokens then.
-  total_tokens: 500_000_000
+  # v1.0-preview: 3B tokens (~67h at ~12.4k tok/s). This is the practical
+  # ceiling for the current ~2.5B-unique-token corpus - past 3B we start
+  # repeating data hard enough to memorize rather than generalize. A true
+  # v1.0 at 10-15B tokens needs the corpus expanded first (Gutenberg
+  # Dialogue, Stack Exchange dumps, more curated dialogue).
+  # Previous 500M run (glemton-350m-squad-poisoned-archive) collapsed into
+  # SQuAD Q&A templates because SQuAD was the only marker-bearing corpus.
+  total_tokens: 3_000_000_000
   lr: 3.0e-4
   lr_min: 3.0e-5
   warmup_tokens: 25_000_000
@@ -36,12 +41,17 @@ train:
   optimizer: adamw
   grad_checkpointing: false
   compile: false
-  checkpoint_every_tokens: 50_000_000
+  checkpoint_every_tokens: 100_000_000
 
 data:
   shard_dir: data/tokenized
   shuffle_buffer: 100000
+  # OPUS (1.98B tokens, real spoken dialogue) is the primary register.
+  # SQuAD dropped: it was the sole <user>/<reply> source in the previous
+  # run and collapsed the model into Q&A-template output.
   source_weights:
-    common_pile: 1.0
-    gutenberg_books: 8.0
-    squad: 4.0
+    opus_subtitles: 1.0
+    common_pile: 0.3
+    gutenberg_books: 2.0
+    hacker_news: 1.0
+    squad: 0.0

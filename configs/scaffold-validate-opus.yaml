@@ -1,0 +1,54 @@
+name: glemton-scaffold-validate-opus
+# 50M model on the post-crash corpus mix. Purpose: confirm the new mix
+# produces conversational <user>/<reply> output, not SQuAD-template or
+# EOS-collapse, before committing 36h of GPU to the 350M run.
+# Target: ~100M tokens (~25 min on the 5070 at 72k tok/s).
+model:
+  vocab_size: 32000
+  d_model: 512
+  n_layers: 12
+  n_heads: 8
+  n_kv_heads: 2
+  ffn_dim: 1376
+  max_seq_len: 2048
+  rope_theta: 10000.0
+  norm_eps: 1.0e-5
+  tie_embeddings: true
+  attention:
+    sliding_window: 2048
+    global_every: 6
+
+train:
+  batch_size: 32
+  micro_batch_size: 4
+  grad_accum_steps: 8
+  seq_len: 1024
+  total_tokens: 100_000_000
+  lr: 4.0e-4
+  lr_min: 4.0e-5
+  warmup_tokens: 3_000_000
+  cosine_decay_to: 0.1
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+  precision: bf16
+  optimizer: adamw
+  grad_checkpointing: false
+  compile: false
+  checkpoint_every_tokens: 25_000_000
+
+data:
+  shard_dir: data/tokenized
+  shuffle_buffer: 10000
+  # OPUS (1.98B tokens, real spoken dialogue) carries the conversational
+  # register. Gutenberg books up-weighted modestly for literary diversity.
+  # Common Pile downweighted - we have plenty of dialogue now, the model
+  # only needs background world knowledge. SQuAD dropped entirely - it
+  # poisoned the 350M run by being the sole source of <user>/<reply> markers.
+  source_weights:
+    opus_subtitles: 1.0
+    common_pile: 0.3
+    gutenberg_books: 2.0
+    hacker_news: 1.0
+    squad: 0.0
