@@ -1,32 +1,61 @@
 # weekend_run.ps1 - unattended 3B-token training for the Glemton 350M v1.0-preview.
 #
+# Designed to run headless as a Windows Scheduled Task (no console, immune to
+# terminal / Claude-Code close). Do NOT launch this from an interactive shell
+# for the real run - a harness-launched process is not detached and dies when
+# the launching tool call ends (see WAKE_UP.md).
+#
 # Resilience:
+#  - FOR_DISABLE_CONSOLE_CTRL_HANDLER=1 stops the Intel Fortran runtime (pulled
+#    in via numpy/MKL) from aborting the process on a window-CLOSE event - this
+#    is what killed the earlier relaunch attempt.
 #  - Resumes from the latest checkpoint if the training process dies.
 #  - A background watcher writes STATUS.md and git-pushes it every ~10 min,
 #    and prunes old checkpoints so the disk does not fill.
 #
-# Run from the project root:
-#   powershell -ExecutionPolicy Bypass -File scripts\weekend_run.ps1
+# Manual headless launch (if not using the scheduled task):
+#   powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File scripts\weekend_run.ps1
 
 $ErrorActionPreference = "Continue"
 $root = "C:\Users\jedin\Desktop\Glemton"
 Set-Location $root
+
+# Detach hardening: keep the Fortran runtime from aborting on console events.
+# Set before any child process spawns so the training process and the watcher
+# job both inherit it.
+$env:FOR_DISABLE_CONSOLE_CTRL_HANDLER = "1"
 $env:PYTHONPATH = "src"
+$env:PYTHONUNBUFFERED = "1"
 
 $py       = ".venv\Scripts\python.exe"
 $cfg      = "configs\glemton-350m.yaml"
 $ckptDir  = "checkpoints\glemton-350m"
 $log      = "logs\glemton_350m_v1_preview.log"
+$wrapLog  = "logs\weekend_run_wrapper.log"
+
+function Log($msg) {
+    $line = "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [weekend_run] $msg"
+    Write-Host $line
+    Add-Content -Path $wrapLog -Value $line -ErrorAction SilentlyContinue
+}
 
 New-Item -ItemType Directory -Force -Path $ckptDir | Out-Null
-# Archive any prior log so ETA math is not polluted by the aborted run.
-if (Test-Path $log) { Move-Item $log "$log.$(Get-Date -Format yyyyMMdd_HHmmss).old" -Force }
+New-Item -ItemType Directory -Force -Path "logs"   | Out-Null
+Log "starting up (pid $PID)"
+
+# Archive any prior training log so ETA math is not polluted by an aborted run.
+if (Test-Path $log) {
+    $archived = "$log.$(Get-Date -Format yyyyMMdd_HHmmss).old"
+    Move-Item $log $archived -Force
+    Log "archived prior log -> $archived"
+}
 
 # ---- background watcher: status push + checkpoint pruning ----
 $watcher = Start-Job -Name glemton-watcher -ScriptBlock {
     $root = "C:\Users\jedin\Desktop\Glemton"
     Set-Location $root
     $env:PYTHONPATH = "src"
+    $env:FOR_DISABLE_CONSOLE_CTRL_HANDLER = "1"
     $ckptDir = Join-Path $root "checkpoints\glemton-350m"
     while ($true) {
         Start-Sleep -Seconds 600
@@ -58,13 +87,13 @@ $watcher = Start-Job -Name glemton-watcher -ScriptBlock {
         } catch {}
     }
 }
-Write-Host "[weekend_run] watcher job started (id $($watcher.Id))"
+Log "watcher job started (id $($watcher.Id))"
 
 # ---- training resume loop ----
 $attempt = 0
 while ($true) {
     if (Test-Path (Join-Path $ckptDir "final.pt")) {
-        Write-Host "[weekend_run] final.pt present - training complete."
+        Log "final.pt present - training complete."
         break
     }
     $attempt++
@@ -72,24 +101,24 @@ while ($true) {
               Sort-Object LastWriteTime | Select-Object -Last 1
 
     if ($latest) {
-        Write-Host "[weekend_run] attempt $attempt - resuming from $($latest.Name)"
+        Log "attempt $attempt - resuming from $($latest.Name)"
         & $py -m glemton.train $cfg --resume $latest.FullName 2>&1 | Tee-Object -FilePath $log -Append
     } else {
-        Write-Host "[weekend_run] attempt $attempt - fresh start"
+        Log "attempt $attempt - fresh start"
         & $py -m glemton.train $cfg 2>&1 | Tee-Object -FilePath $log -Append
     }
     $code = $LASTEXITCODE
-    Write-Host "[weekend_run] training process exited (code $code)"
+    Log "training process exited (code $code)"
 
     if (Test-Path (Join-Path $ckptDir "final.pt")) {
-        Write-Host "[weekend_run] final.pt present - done."
+        Log "final.pt present - done."
         break
     }
     if ($attempt -ge 50) {
-        Write-Host "[weekend_run] 50 failed attempts - giving up to avoid a crash loop."
+        Log "50 failed attempts - giving up to avoid a crash loop."
         break
     }
-    Write-Host "[weekend_run] will resume in 30s..."
+    Log "will resume in 30s..."
     Start-Sleep -Seconds 30
 }
 
@@ -102,4 +131,4 @@ try {
 } catch {}
 Stop-Job $watcher -ErrorAction SilentlyContinue
 Remove-Job $watcher -Force -ErrorAction SilentlyContinue
-Write-Host "[weekend_run] done."
+Log "done."

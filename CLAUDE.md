@@ -1,5 +1,9 @@
 # Glemton — project instructions for Claude
 
+> **Session start:** read `WAKE_UP.md` first — it is the live status handoff
+> (what's running, what's done, what's next). This file is the stable project
+> rules; `WAKE_UP.md` is the current state.
+
 ## Core working rules (READ FIRST)
 
 ### Honesty
