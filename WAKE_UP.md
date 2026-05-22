@@ -9,8 +9,15 @@ stable rules; this file is what is actually happening right now.
 ## STATE: v1.0-preview run IS RUNNING (started 2026-05-21 20:32).
 
 The 350M v1.0-preview run is live, decoupled from Claude Code, as the Windows
-Scheduled Task **`Glemton-WeekendTrain`**. Fresh start at step 0; ~12.2k tok/s;
-ETA ~2d20h; projected finish **Sun 2026-05-24 ~17:00**.
+Scheduled Task **`Glemton-WeekendTrain`**. Fresh start at step 0; ~12.5k tok/s;
+projected finish **Sun 2026-05-24 ~17:00**.
+
+**As of 2026-05-22 ~09:00:** ~540M / 3B tokens (~18%), loss ~2.3, one clean
+run, zero crashes/resumes overnight. ninjahawk is away ~3 days; a session-based
+monitor loop is watching it and is set to auto-run the sycophancy +
+long-conversation evals and sample the model once `final.pt` appears.
+Open risk while away: Windows Update is NOT paused — a reboot with no login
+would silently halt training until return.
 
 **Do NOT relaunch it.** The task owns the process — it survives terminal /
 Claude-Code close and auto-resumes from the latest checkpoint after a reboot
