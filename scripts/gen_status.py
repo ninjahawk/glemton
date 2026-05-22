@@ -23,11 +23,29 @@ STEP_RE = re.compile(
 CRASH_RE = re.compile(r"Traceback|RuntimeError|CUDA error|OOM|Killed|FAILED", re.I)
 
 
+def _read_text_any(path: Path) -> str:
+    """Decode a log file regardless of encoding.
+
+    PowerShell's Tee-Object writes UTF-16 LE; a plain redirect may write
+    UTF-8. Sniff the BOM (and fall back to a null-byte heuristic for
+    BOM-less UTF-16) so STATUS.md parsing never silently sees zero steps.
+    """
+    raw = path.read_bytes()
+    if raw.startswith(b"\xff\xfe"):
+        return raw.decode("utf-16-le", errors="replace")
+    if raw.startswith(b"\xfe\xff"):
+        return raw.decode("utf-16-be", errors="replace")
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw.decode("utf-8-sig", errors="replace")
+    if raw[:400].count(0) > 40:  # BOM-less UTF-16
+        return raw.decode("utf-16-le", errors="replace")
+    return raw.decode("utf-8", errors="replace")
+
+
 def tail(path: Path, n: int) -> list[str]:
     if not path.exists():
         return []
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    return lines[-n:]
+    return _read_text_any(path).splitlines()[-n:]
 
 
 def main() -> None:
