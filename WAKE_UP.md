@@ -1,16 +1,24 @@
 # WAKE_UP — live status handoff
 
-**Updated:** 2026-05-21 afternoon
+**Updated:** 2026-05-21 evening
 **Read this first.** It is the current state of the project. CLAUDE.md is the
 stable rules; this file is what is actually happening right now.
 
 ---
 
-## STATE: training NOT running. Ready to launch the v1.0-preview run.
+## STATE: v1.0-preview run IS RUNNING (started 2026-05-21 20:32).
 
-Nothing is training right now. No process is live, GPU is idle, no checkpoints
-exist for the current run. The plan below is ready to execute — it has not been
-started. Do not assume anything is in progress.
+The 350M v1.0-preview run is live, decoupled from Claude Code, as the Windows
+Scheduled Task **`Glemton-WeekendTrain`**. Fresh start at step 0; ~12.2k tok/s;
+ETA ~2d20h; projected finish **Sun 2026-05-24 ~17:00**.
+
+**Do NOT relaunch it.** The task owns the process — it survives terminal /
+Claude-Code close and auto-resumes from the latest checkpoint after a reboot
+(it has an AtLogOn trigger). To check progress, read `STATUS.md` (pushed to
+`origin/master` every ~10 min) or `logs/glemton_350m_v1_preview.log`.
+
+If you must stop it: `Stop-ScheduledTask -TaskName Glemton-WeekendTrain` then
+kill the `weekend_run.ps1` powershell + `glemton.train` python processes.
 
 ---
 
@@ -81,27 +89,32 @@ tokens. Past that the model memorizes rather than generalizes. A true v1.0 at
 
 **Runtime:** ~67 h at ~12.4 k tok/s.
 
-### Decoupled execution design (the crash-proof setup)
-Run `scripts/weekend_run.ps1` as a **Windows Scheduled Task**, not from any
-terminal. The Task Scheduler *service* owns the process — no console, immune
-to terminal/Claude-Code close. The wrapper itself resumes training from the
-latest checkpoint if training crashes, writes `STATUS.md`, git-pushes it every
-~10 min, and prunes old checkpoints so the disk does not fill. Claude Code is
-then a pure read-only observer (reads log + STATUS.md + checkpoints).
+### Decoupled execution — BUILT AND RUNNING
+`scripts/weekend_run.ps1` runs as the Scheduled Task `Glemton-WeekendTrain`
+(per-user, "run only when logged on" → no admin/UAC; AtLogOn trigger so it
+resumes after a reboot; no execution time limit; runs on battery). The Task
+Scheduler service owns the process — no console, immune to terminal close.
+The wrapper resumes from the latest checkpoint on crash, writes `STATUS.md`,
+git-pushes it every ~10 min, and prunes old checkpoints. Claude Code is now a
+pure read-only observer.
 
-### Delegation
-**Claude does:** harden `weekend_run.ps1` for headless running
-(`FOR_DISABLE_CONSOLE_CTRL_HANDLER=1`); write + register the per-user
-scheduled task ("run only when logged on" → no admin/UAC); start it; verify
-it is stepping and STATUS.md pushes.
+Done this session: hardened `weekend_run.ps1`
+(`FOR_DISABLE_CONSOLE_CTRL_HANDLER=1` + wrapper log); fixed `gen_status.py` to
+parse the UTF-16 training log (it was stuck at NOT STARTED); registered and
+started the task; preflight-verified the model steps cleanly (loss 10.6→8.2,
+no nan); confirmed STATUS.md populates.
 
-**ninjahawk does:** pause Windows Update (Settings → Windows Update → Pause —
-do NOT let Claude registry-hack this); optionally enable Remote Control for
-phone steering; keep the PC on, plugged in, logged in over the trip.
+### ninjahawk's part (still needed)
+- **Pause Windows Update** (Settings → Windows Update → Pause). Do NOT let
+  Claude registry-hack this.
+- Keep the PC **on, plugged in, and logged in** for the whole trip — the task
+  is "run only when logged on"; a logoff stops it (a reboot+login restarts it).
+- Optional: enable Remote Control for phone steering.
 
 ### NEXT ACTION for a fresh terminal
-The scheduled-task setup is designed but **not yet built or registered**.
-Pick up at: harden `weekend_run.ps1`, then create the scheduled task.
+Nothing to launch. **Monitor only.** Check `STATUS.md` for progress. If state
+shows CRASH, the wrapper auto-resumes — confirm via `logs/weekend_run_wrapper.log`.
+First checkpoint lands at 100M tokens (~2.2h in).
 
 ---
 
