@@ -1,21 +1,21 @@
 # Glemton 350M v1.0-preview - training status
 
-_Auto-generated 2026-05-24 13:52:52 local. Updated every ~10 min by `weekend_run.ps1`._
+_Auto-generated 2026-05-24 14:02:54 local. Updated every ~10 min by `weekend_run.ps1`._
 
 ## State: TRAINING
 
 | Metric | Value |
 |---|---|
-| Tokens seen | 2936M / 3000M (97.9%) |
-| Step | 179210 |
-| Latest loss | 2.2692 |
-| Avg loss (last 30 logged) | 2.1123 |
+| Tokens seen | 2944M / 3000M (98.1%) |
+| Step | 179670 |
+| Latest loss | 2.1716 |
+| Avg loss (last 30 logged) | 2.0824 |
 | Throughput | 12,484 tok/s |
-| ETA to 3B tokens | 1:25:10 |
+| ETA to 3B tokens | 1:15:09 |
 | Projected finish | Sun 2026-05-24 15:18 |
 
 ## Loss trajectory (sampled)
-2.23 -> 1.36 -> 2.32 -> 1.88 -> 1.90 -> 1.83 -> 2.67 -> 1.97 -> 1.74 -> 1.96 -> 1.68 -> 1.73
+2.05 -> 2.01 -> 1.88 -> 1.56 -> 2.17 -> 2.16 -> 2.01 -> 2.07 -> 2.13 -> 2.08 -> 2.36 -> 2.00
 
 ## Checkpoints on disk
 - `step_122071_tokens_2000M.pt`
@@ -30,16 +30,16 @@ _Auto-generated 2026-05-24 13:52:52 local. Updated every ~10 min by `weekend_run
 
 ## Recent log tail
 ```
-[train] step=179100 tokens=2934.4M loss=2.5531 lr=3.03e-05 tok/s=12484
-[train] step=179110 tokens=2934.5M loss=1.8568 lr=3.03e-05 tok/s=12484
-[train] step=179120 tokens=2934.7M loss=1.4824 lr=3.03e-05 tok/s=12484
-[train] step=179130 tokens=2934.9M loss=2.2504 lr=3.03e-05 tok/s=12484
-[train] step=179140 tokens=2935.0M loss=1.9614 lr=3.03e-05 tok/s=12484
-[train] step=179150 tokens=2935.2M loss=1.9594 lr=3.03e-05 tok/s=12484
-[train] step=179160 tokens=2935.4M loss=2.3256 lr=3.03e-05 tok/s=12484
-[train] step=179170 tokens=2935.5M loss=2.0544 lr=3.03e-05 tok/s=12484
-[train] step=179180 tokens=2935.7M loss=1.9057 lr=3.03e-05 tok/s=12484
-[train] step=179190 tokens=2935.8M loss=1.7342 lr=3.03e-05 tok/s=12484
-[train] step=179200 tokens=2936.0M loss=2.1712 lr=3.03e-05 tok/s=12484
-[train] step=179210 tokens=2936.2M loss=2.2692 lr=3.03e-05 tok/s=12484
+[train] step=179560 tokens=2941.9M loss=1.8756 lr=3.03e-05 tok/s=12484
+[train] step=179570 tokens=2942.1M loss=2.0989 lr=3.03e-05 tok/s=12484
+[train] step=179580 tokens=2942.2M loss=2.1768 lr=3.03e-05 tok/s=12484
+[train] step=179590 tokens=2942.4M loss=1.9015 lr=3.02e-05 tok/s=12484
+[train] step=179600 tokens=2942.6M loss=2.2490 lr=3.02e-05 tok/s=12484
+[train] step=179610 tokens=2942.7M loss=1.8891 lr=3.02e-05 tok/s=12484
+[train] step=179620 tokens=2942.9M loss=1.8846 lr=3.02e-05 tok/s=12484
+[train] step=179630 tokens=2943.1M loss=2.0046 lr=3.02e-05 tok/s=12484
+[train] step=179640 tokens=2943.2M loss=1.9941 lr=3.02e-05 tok/s=12484
+[train] step=179650 tokens=2943.4M loss=2.0019 lr=3.02e-05 tok/s=12484
+[train] step=179660 tokens=2943.5M loss=2.1751 lr=3.02e-05 tok/s=12484
+[train] step=179670 tokens=2943.7M loss=2.1716 lr=3.02e-05 tok/s=12484
 ```
