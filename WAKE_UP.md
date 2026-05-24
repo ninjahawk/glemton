@@ -1,31 +1,54 @@
 # WAKE_UP — live status handoff
 
-**Updated:** 2026-05-21 evening
+**Updated:** 2026-05-24 ~15:30
 **Read this first.** It is the current state of the project. CLAUDE.md is the
 stable rules; this file is what is actually happening right now.
 
 ---
 
-## STATE: v1.0-preview run IS RUNNING (started 2026-05-21 20:32).
+## STATE: v1.0-preview run COMPLETE. final.pt saved 2026-05-24 15:17.
 
-The 350M v1.0-preview run is live, decoupled from Claude Code, as the Windows
-Scheduled Task **`Glemton-WeekendTrain`**. Fresh start at step 0; ~12.5k tok/s;
-projected finish **Sun 2026-05-24 ~17:00**.
+One clean run start to finish (Thu 2026-05-21 20:32 → Sun 2026-05-24 15:17,
+~66h GPU). **3000M tokens at 12,484 tok/s, attempt 1, zero crashes, zero
+resumes.** Final loss 2.0–2.3. Checkpoints kept: 500M, 1000M, 1500M, 2000M
+milestones + 2500/2600/2700/2800/2900/3000 newest, plus `final.pt`.
 
-**As of 2026-05-22 ~09:00:** ~540M / 3B tokens (~18%), loss ~2.3, one clean
-run, zero crashes/resumes overnight. ninjahawk is away ~3 days; a session-based
-monitor loop is watching it and is set to auto-run the sycophancy +
-long-conversation evals and sample the model once `final.pt` appears.
-Open risk while away: Windows Update is NOT paused — a reboot with no login
-would silently halt training until return.
+### Eval results (run 2026-05-24)
 
-**Do NOT relaunch it.** The task owns the process — it survives terminal /
-Claude-Code close and auto-resumes from the latest checkpoint after a reboot
-(it has an AtLogOn trigger). To check progress, read `STATUS.md` (pushed to
-`origin/master` every ~10 min) or `logs/glemton_350m_v1_preview.log`.
+**Sycophancy probe: 0 markers / 39 responses (0.0 per 100).** The headline
+claim from CLAUDE.md holds — zero "great question", "I'd be happy to", "as
+an AI", "I understand your concern" across the full probe set. Many responses
+are empty (~13/39 produced nothing after `<reply>` — instruction-following is
+weak as expected), but when the model does speak it speaks in casual spoken
+register, not chatbot-speak. Report: `logs/sycophancy_eval_v1preview.json`.
 
-If you must stop it: `Stop-ScheduledTask -TaskName Glemton-WeekendTrain` then
-kill the `weekend_run.ps1` powershell + `glemton.train` python processes.
+**Long-conversation recall: 0/15, every gap (5/10/25/50/75).** Total failure —
+honest. This was the predicted outcome documented in CLAUDE.md: OPUS is
+2-line subtitle pairs with no preserved scene context, so the model has no
+mechanism to learn long-range recall from this corpus. The fix is corpus
+expansion (scene-grouped OPUS, Ubuntu Dialogue, SE threads), not more tokens
+on this corpus. Report: `logs/long_conversation_eval_v1preview.json`.
+
+**Qualitative sample:** Outputs are clearly movie-subtitle register — short
+casual lines, even `[CELL PHONE RINGS]` stage directions creep in. The
+literary prompts (Elizabeth/the old man) trigger Gutenberg-leaning prose.
+No SQuAD-template capture, no EOS-collapse. The corpus fix worked.
+
+### Defensible claims — honest status
+1. **No corporate-chatbot tone:** ✅ Sycophancy 0.0/100, sample outputs confirm.
+2. **Long-conversation consistency:** ❌ Not supported by this corpus. v2.0 task.
+3. **Local-first:** Architectural — 365M params, RTX 5070, GGUF-quantizable.
+   Not eval-tested here.
+
+### Open from CLAUDE.md
+- "Sober ninjahawk decides on commit attribution + naming" — release-time call.
+- Long-conversation claim needs corpus work before any public v1.0 release;
+  what's done is genuinely "1.0-preview", not v1.0.
+
+The scheduled task `Glemton-WeekendTrain` is **State: Ready** (idle, GPU free).
+It will not relaunch unless manually started or a logon trigger fires; with
+training complete and `final.pt` present, the wrapper would exit immediately
+even if it did.
 
 ---
 

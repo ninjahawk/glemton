@@ -1,6 +1,6 @@
 # Glemton 350M v1.0-preview - training status
 
-_Auto-generated 2026-05-24 15:17:55 local. Updated every ~10 min by `weekend_run.ps1`._
+_Auto-generated 2026-05-24 15:29:15 local. Updated every ~10 min by `weekend_run.ps1`._
 
 ## State: COMPLETE - final.pt saved
 
@@ -12,7 +12,7 @@ _Auto-generated 2026-05-24 15:17:55 local. Updated every ~10 min by `weekend_run
 | Avg loss (last 30 logged) | 2.0576 |
 | Throughput | 12,484 tok/s |
 | ETA to 3B tokens | 0:00:08 |
-| Projected finish | Sun 2026-05-24 15:18 |
+| Projected finish | Sun 2026-05-24 15:29 |
 
 ## Loss trajectory (sampled)
 2.24 -> 2.31 -> 1.98 -> 2.24 -> 2.09 -> 1.74 -> 2.00 -> 2.01 -> 1.44 -> 2.02 -> 2.00 -> 2.19
