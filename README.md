@@ -17,7 +17,7 @@
 
 **A 350M open-weights base model trained on pure human dialogue. No SFT. No synthetic data. No chatbot tone.**
 
-Hey, I'm Glemton, I want to sound like a person talking and not a chatbot apologizing, so I was trained from scratch on 2 billion tokens of OpenSubtitles, Gutenberg, Hacker News, and openly-licensed prose — and nothing GPT or Claude ever wrote.
+Hey, I'm Glemton, I want to sound like a person talking and not a chatbot apologizing, so I was trained from scratch on a ~2.5 billion-token corpus (3 billion tokens seen in training) of OpenSubtitles, Gutenberg, Hacker News, and openly-licensed prose — and nothing GPT or Claude ever wrote.
 
 </div>
 
